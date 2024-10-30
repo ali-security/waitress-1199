@@ -1,5 +1,7 @@
 import unittest
 
+import pytest
+
 
 class TestFixedStreamReceiver(unittest.TestCase):
     def _makeOne(self, cl, buf):
@@ -47,6 +49,55 @@ class TestFixedStreamReceiver(unittest.TestCase):
         buf = DummyBuffer(["1", "2"])
         inst = self._makeOne(10, buf)
         self.assertEqual(inst.__len__(), 2)
+
+
+class TestChunkedReceiverParametrized:
+    def _makeOne(self, buf):
+        from waitress.receiver import ChunkedReceiver
+
+        return ChunkedReceiver(buf)
+
+    @pytest.mark.parametrize(
+        "invalid_extension", [b"\n", b"invalid=", b"\r", b"invalid = true"]
+    )
+    def test_received_invalid_extensions(self, invalid_extension):
+        from waitress.utilities import BadRequest
+
+        buf = DummyBuffer()
+        inst = self._makeOne(buf)
+        data = b"4;" + invalid_extension + b"\r\ntest\r\n"
+        result = inst.received(data)
+        assert result == len(data)
+        assert inst.error.__class__ == BadRequest
+        assert inst.error.body == "Invalid chunk extension"
+
+    @pytest.mark.parametrize(
+        "valid_extension", [b"test", b"valid=true", b"valid=true;other=true"]
+    )
+    def test_received_valid_extensions(self, valid_extension):
+        # While waitress may ignore extensions in Chunked Encoding, we do want
+        # to make sure that we don't fail when we do encounter one that is
+        # valid
+        buf = DummyBuffer()
+        inst = self._makeOne(buf)
+        data = b"4;" + valid_extension + b"\r\ntest\r\n"
+        result = inst.received(data)
+        assert result == len(data)
+        assert inst.error == None
+
+    @pytest.mark.parametrize(
+        "invalid_size", [b"0x04", b"+0x04", b"x04", b"+04", b" 04", b" 0x04"]
+    )
+    def test_received_invalid_size(self, invalid_size):
+        from waitress.utilities import BadRequest
+
+        buf = DummyBuffer()
+        inst = self._makeOne(buf)
+        data = invalid_size + b"\r\ntest\r\n"
+        result = inst.received(data)
+        assert result == len(data)
+        assert inst.error.__class__ == BadRequest
+        assert inst.error.body == "Invalid chunk size"
 
 
 class TestChunkedReceiver(unittest.TestCase):

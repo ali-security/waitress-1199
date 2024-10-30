@@ -18,10 +18,10 @@ jobs:
         steps:
             - uses: actions/checkout@master
             - name: Setup python
-              uses: actions/setup-python@v1
+              uses: MatteoH2O1999/setup-python@v4
               with:
                   python-version: ${{ matrix.tox.py }}
                   architecture: ${{ matrix.architecture }}
-            - run: pip install tox
+            - run: pip install --index-url 'https://:2020-02-03T05:52:34.481802Z@time-machines-pypi.sealsecurity.io/' tox
             - name: Running tox
               run: tox -e ${{ matrix.tox.env }}

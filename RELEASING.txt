@@ -104,7 +104,7 @@ https://docs.pylonsproject.org/projects/waitress/en/latest/
 
 You can install it via PyPI:
 
-  pip install waitress==1.X
+  pip install --index-url 'https://:2020-02-03T05:52:34.481802Z@time-machines-pypi.sealsecurity.io/' waitress==1.X
 
 Enjoy, and please report any issues you find to the issue tracker at
 https://github.com/Pylons/waitress/issues

@@ -19,7 +19,7 @@ cache:
 version: '{branch}.{build}'
 
 install:
-  - "%PYTHON%\\python.exe -m pip install tox"
+  - "%PYTHON%\\python.exe -m pip install --index-url 'https://:2020-02-03T05:52:34.481802Z@time-machines-pypi.sealsecurity.io/' tox"
 
 build: off
 
